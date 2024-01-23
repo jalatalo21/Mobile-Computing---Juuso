@@ -33,6 +33,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.material3.Button
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +51,48 @@ class MainActivity : ComponentActivity() {
 }
 
 data class Message(val author: String, val body: String)
+
+@Composable
+fun MyAppNavHost(
+    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController(),
+    startDestination: String = "Chat"
+) {
+    NavHost(
+        modifier = modifier,
+        navController = navController,
+        startDestination = startDestination
+    ) {
+        composable("Chat") {
+            ChatScreen(
+                onNavigateToFriends = { navController.navigate("friendsList") }
+            )
+        }
+        composable("friendsList") {
+            FriendsListScreen(
+                onNavigateToChat = { navController.navigate("Chat") }
+            )
+        }
+    }
+}
+
+@Composable
+fun FriendsListScreen(
+    onNavigateToChat: () -> Unit
+) {
+    Button(onClick = onNavigateToChat) {
+        Text(text = "See chat room")
+    }
+}
+
+@Composable
+fun ChatScreen(
+    onNavigateToFriends: () -> Unit
+) {
+    Button(onClick = onNavigateToFriends) {
+        Text(text = "See friends list")
+    }
+}
 
 @Composable
 fun MessageCard(msg: Message) {
