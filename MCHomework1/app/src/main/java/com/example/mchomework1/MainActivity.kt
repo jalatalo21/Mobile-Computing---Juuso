@@ -33,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
-import androidx.compose.material3.Button
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -44,7 +43,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MCHomework1Theme {
-                Conversation(SampleData.conversationSample)
+                MyAppNavHost()
             }
         }
     }
@@ -65,32 +64,23 @@ fun MyAppNavHost(
     ) {
         composable("Chat") {
             ChatScreen(
-                onNavigateToFriends = { navController.navigate("friendsList") }
+                onNavigateToFriends = {
+                    navController.navigate("friendsList")
+
+                }
             )
         }
         composable("friendsList") {
             FriendsListScreen(
-                onNavigateToChat = { navController.navigate("Chat") }
+                onNavigateToChat = {
+                    navController.navigate("Chat") {
+                        popUpTo("Chat") {
+                            inclusive = true
+                        }
+                    }
+                }
             )
         }
-    }
-}
-
-@Composable
-fun FriendsListScreen(
-    onNavigateToChat: () -> Unit
-) {
-    Button(onClick = onNavigateToChat) {
-        Text(text = "See chat room")
-    }
-}
-
-@Composable
-fun ChatScreen(
-    onNavigateToFriends: () -> Unit
-) {
-    Button(onClick = onNavigateToFriends) {
-        Text(text = "See friends list")
     }
 }
 
@@ -126,7 +116,9 @@ fun MessageCard(msg: Message) {
                 shape = MaterialTheme.shapes.medium,
                 shadowElevation = 1.dp,
                 color = surfaceColor,
-                modifier = Modifier.animateContentSize().padding(1.dp)
+                modifier = Modifier
+                    .animateContentSize()
+                    .padding(1.dp)
             ) {
                 Text(
                     text = msg.body,
