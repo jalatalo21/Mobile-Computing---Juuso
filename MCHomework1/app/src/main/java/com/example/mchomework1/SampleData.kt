@@ -1,9 +1,17 @@
 package com.example.mchomework1
 
+import androidx.compose.runtime.Composable
+
 /**
  * com.example.mchomework1.SampleData for Jetpack Compose Tutorial
  */
+
 object SampleData {
+
+    val messageSample = Message(
+        "Kissa",
+        "Test...Test...Test..."
+    )
     // Sample conversation data
     val conversationSample = listOf(
         Message(

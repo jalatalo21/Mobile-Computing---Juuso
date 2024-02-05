@@ -1,5 +1,7 @@
 package com.example.mchomework1
 
+import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,6 +26,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.border
 import androidx.compose.material3.MaterialTheme
 import android.content.res.Configuration
+import android.net.Uri
+import android.view.View
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.clickable
@@ -33,17 +40,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.room.ColumnInfo
+import androidx.room.Dao
+import androidx.room.Database
+import androidx.room.Delete
+import androidx.room.Entity
+import androidx.room.Insert
+import androidx.room.PrimaryKey
+import androidx.room.Query
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import kotlinx.coroutines.MainScope
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "UserDatabase"
+        ).allowMainThreadQueries().build()
+
         setContent {
             MCHomework1Theme {
-                MyAppNavHost()
+                MyAppNavHost(database = db)
             }
         }
     }
@@ -55,8 +81,62 @@ data class Message(val author: String, val body: String)
 fun MyAppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = "Chat"
+    startDestination: String = "Chat",
+    database: AppDatabase
 ) {
+    val userDao = database.userDao()
+    val size: List<User> = userDao.getAll()
+    if(size.isEmpty()) {
+        val user = User(
+            uid = 1,
+            userName = "Kissa",
+            image = Uri.EMPTY.toString()
+        )
+        userDao.insertUser(user)
+    }
+
+    val users: List<User> = userDao.getAll()
+    var userName by remember {
+        mutableStateOf<String>(users[0].userName)
+    }
+    var image by remember {
+        mutableStateOf<Uri>(users[0].image.toUri())
+    }
+
+    val context = LocalContext.current
+
+    val pickMedia = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = {
+            uri -> if(uri != null) {
+                val new_image = imageToStorage(context, uri)
+                image = new_image
+                val user = User(
+                    uid = users[0].uid,
+                    userName,
+                    image.toString()
+                )
+                userDao.updateUser(user)
+            }
+        }
+    )
+
+    fun changeUserName(new_name: String) {
+        userName = new_name
+        val user = User(
+            uid = users[0].uid,
+            userName,
+            image.toString()
+        )
+        userDao.updateUser(user)
+    }
+
+    fun launchPhotoPicker() {
+        pickMedia.launch(
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        )
+    }
+
     NavHost(
         modifier = modifier,
         navController = navController,
@@ -66,8 +146,9 @@ fun MyAppNavHost(
             ChatScreen(
                 onNavigateToFriends = {
                     navController.navigate("friendsList")
-
-                }
+                },
+                userName = userName,
+                image = image
             )
         }
         composable("friendsList") {
@@ -78,74 +159,26 @@ fun MyAppNavHost(
                             inclusive = true
                         }
                     }
-                }
+                },
+                onPickImage = { launchPhotoPicker() },
+                userName = userName,
+                image = image,
+                changeUserName = { changeUserName(it) }
             )
         }
     }
 }
 
-@Composable
-fun MessageCard(msg: Message) {
-    Row (modifier = Modifier.padding(all = 8.dp)){
-        Image(
-            painter = painterResource(R.drawable.kissa),
-            contentDescription = "Kissa kuva",
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        var isExpanded by remember { mutableStateOf(false) }
-        val surfaceColor by animateColorAsState(
-            if (isExpanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-        )
-
-        Column(modifier = Modifier.clickable { isExpanded = !isExpanded }) {
-            Text(
-                text = msg.author,
-                color = MaterialTheme.colorScheme.secondary,
-                style = MaterialTheme.typography.titleSmall
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Surface(
-                shape = MaterialTheme.shapes.medium,
-                shadowElevation = 1.dp,
-                color = surfaceColor,
-                modifier = Modifier
-                    .animateContentSize()
-                    .padding(1.dp)
-            ) {
-                Text(
-                    text = msg.body,
-                    modifier = Modifier.padding(all = 4.dp),
-                    maxLines = if (isExpanded) Int.MAX_VALUE else 1,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+fun imageToStorage(context: Context, uri: Uri): Uri {
+    val inputStream = context.contentResolver.openInputStream(uri)
+    val outputStream = context.openFileOutput("image.jpg", Context.MODE_PRIVATE)
+    inputStream?.use {
+        input -> outputStream?.use {
+            output -> input.copyTo(output)
         }
     }
-}
-
-@Composable
-fun Conversation(messages: List<Message>) {
-    LazyColumn {
-        items(messages) { message ->
-            MessageCard(message)
-        }
-    }
-}
-
-@Preview
-@Composable
-fun PreviewConversation() {
-    MCHomework1Theme {
-        Conversation(SampleData.conversationSample)
-    }
+    val file = File(context.filesDir, "image.jpg")
+    return Uri.fromFile(file)
 }
 
 @Preview(name = "Light Mode")
@@ -160,9 +193,7 @@ fun PreviewConversation() {
 fun PreviewMessageCard() {
     MCHomework1Theme {
         Surface {
-            MessageCard(
-                msg = Message("Lexi", "Take a look at Jetpack Compose, it's great!")
-            )
+            MessageCard(SampleData.messageSample, userName = "Kissa", image = Uri.EMPTY)
         }
     }
 }
