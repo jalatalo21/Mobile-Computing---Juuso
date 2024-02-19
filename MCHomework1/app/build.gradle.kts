@@ -49,6 +49,8 @@ android {
 
 dependencies {
 
+    implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
+    //implementation("androidx.core:core-ktx:2.2.0")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
