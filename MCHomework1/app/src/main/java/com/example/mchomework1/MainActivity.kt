@@ -102,10 +102,10 @@ fun MyAppNavHost(
     startDestination: String = "Chat",
     database: AppDatabase,
 ) {
-    val postNotificationPermission = rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS)
-    LaunchedEffect(key1 = true) {
-        if (!postNotificationPermission.status.isGranted) {
-            postNotificationPermission.launchPermissionRequest()
+    val notificationPermission = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+    LaunchedEffect(true) {
+        if (!notificationPermission.status.isGranted) {
+            notificationPermission.launchPermissionRequest()
         }
     }
     val userDao = database.userDao()
@@ -114,7 +114,7 @@ fun MyAppNavHost(
         val user = User(
             uid = 1,
             userName = "Kissa",
-            image = Uri.EMPTY.toString()
+            image = Uri.EMPTY.toString(),
         )
         userDao.insertUser(user)
     }
@@ -138,7 +138,7 @@ fun MyAppNavHost(
                 val user = User(
                     uid = users[0].uid,
                     userName,
-                    image.toString()
+                    image.toString(),
                 )
                 userDao.updateUser(user)
             }
@@ -150,7 +150,7 @@ fun MyAppNavHost(
         val user = User(
             uid = users[0].uid,
             userName,
-            image.toString()
+            image.toString(),
         )
         userDao.updateUser(user)
     }

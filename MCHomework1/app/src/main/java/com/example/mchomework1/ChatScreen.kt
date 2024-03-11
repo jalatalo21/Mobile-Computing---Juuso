@@ -6,9 +6,11 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import coil.compose.AsyncImage
 
 @Composable
@@ -37,11 +41,38 @@ fun ChatScreen(
     userName: String,
     image: Uri
 ) {
-    Column {
-        Button(onClick = onNavigateToFriends) {
-            Text(text = "See profile screen")
+    Row (modifier = Modifier.padding(all = 8.dp)) {
+        Column {
+            Button(onClick = onNavigateToFriends) {
+                Text(text = "See profile screen")
+            }
+
+            var text by remember { mutableStateOf("") }
+            var viesti by remember { mutableStateOf(Message("", ""))}
+
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                val textFieldDefaultHorPad = 16.dp
+                val maxInputWidth = maxWidth - 8 * textFieldDefaultHorPad
+                Row {
+                    TextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        label = { Text("New message") },
+                        modifier = Modifier.width(maxInputWidth)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(onClick = {
+                        viesti = Message("author", text)
+                        addMessage(viesti)
+                        text = "" }
+                    ) {
+                        Text(text = "Send")
+                    }
+                }
+            }
+            Conversation(messages = SampleData.conversationSample, userName = userName, image = image)
+            MessageCard(msg = viesti, userName = userName, image = image)
         }
-        Conversation(messages = SampleData.conversationSample, userName = userName, image = image)
     }
 }
 

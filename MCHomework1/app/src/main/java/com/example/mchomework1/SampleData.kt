@@ -5,7 +5,9 @@ import androidx.compose.runtime.Composable
 /**
  * com.example.mchomework1.SampleData for Jetpack Compose Tutorial
  */
-
+fun addMessage(message: Message) {
+    SampleData.conversationSample.add(message)
+}
 object SampleData {
 
     val messageSample = Message(
@@ -13,7 +15,7 @@ object SampleData {
         "Test...Test...Test..."
     )
     // Sample conversation data
-    val conversationSample = listOf(
+    val conversationSample = mutableListOf(
         Message(
             "Kissa",
             "Test...Test...Test..."
@@ -62,22 +64,6 @@ object SampleData {
         Message(
             "Kissa",
             "Android Studio Arctic Fox tooling for Compose is top notch ^_^"
-        ),
-        Message(
-            "Kissa",
-            "I didn't know you can now run the emulator directly from Android Studio"
-        ),
-        Message(
-            "Kissa",
-            "Compose Previews are great to check quickly how a composable layout looks like"
-        ),
-        Message(
-            "Kissa",
-            "Previews are also interactive after enabling the experimental setting"
-        ),
-        Message(
-            "Kissa",
-            "Have you tried writing build.gradle with KTS?"
         ),
     )
 }
