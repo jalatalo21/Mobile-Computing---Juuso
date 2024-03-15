@@ -12,6 +12,9 @@ interface UserDao {
     @Query("SELECT * FROM user")
     fun getAll(): List<User>
 
+    @Query("SELECT messages FROM user")
+    fun getMessages(): String
+
     @Insert
     fun insertUser(user: User)
 

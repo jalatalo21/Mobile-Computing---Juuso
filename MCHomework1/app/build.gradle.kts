@@ -51,6 +51,7 @@ android {
 
 dependencies {
 
+    implementation("com.google.code.gson:gson:2.8.5")
     implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
     //implementation("androidx.core:core-ktx:2.2.0")
     implementation("io.coil-kt:coil-compose:2.5.0")
@@ -101,6 +102,7 @@ dependencies {
 }
 
 dependencies {
+    implementation("androidx.privacysandbox.tools:tools-core:1.0.0-alpha07")
     val nav_version = "2.7.6"
 
     // Java language implementation

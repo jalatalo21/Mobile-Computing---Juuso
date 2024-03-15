@@ -39,7 +39,9 @@ import coil.compose.AsyncImage
 fun ChatScreen(
     onNavigateToFriends: () -> Unit,
     userName: String,
-    image: Uri
+    image: Uri,
+    conversation: List<Message>,
+    addMessageToList: (Message) -> Unit
 ) {
     Row (modifier = Modifier.padding(all = 8.dp)) {
         Column {
@@ -63,14 +65,14 @@ fun ChatScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(onClick = {
                         viesti = Message("author", text)
-                        addMessage(viesti)
+                        addMessageToList(viesti)
                         text = "" }
                     ) {
                         Text(text = "Send")
                     }
                 }
             }
-            Conversation(messages = SampleData.conversationSample, userName = userName, image = image)
+            Conversation(messages = conversation, userName = userName, image = image)
             MessageCard(msg = viesti, userName = userName, image = image)
         }
     }

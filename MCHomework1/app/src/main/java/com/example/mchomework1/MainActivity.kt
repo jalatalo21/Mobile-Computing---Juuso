@@ -38,7 +38,10 @@ import com.example.mchomework1.ui.theme.MCHomework1Theme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.io.File
+import java.util.Collections
 
 class MainActivity : ComponentActivity(), SensorEventListener {
 
@@ -57,7 +60,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         val db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java, "UserDatabase"
-        ).allowMainThreadQueries().build()
+        ).allowMainThreadQueries().fallbackToDestructiveMigration().build()
 
         setContent {
             MCHomework1Theme {
@@ -102,6 +105,7 @@ fun MyAppNavHost(
     startDestination: String = "Chat",
     database: AppDatabase,
 ) {
+    val gson = Gson()
     val notificationPermission = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
     LaunchedEffect(true) {
         if (!notificationPermission.status.isGranted) {
@@ -115,6 +119,7 @@ fun MyAppNavHost(
             uid = 1,
             userName = "Kissa",
             image = Uri.EMPTY.toString(),
+            messageList = gson.toJson(SampleData.conversationSample)
         )
         userDao.insertUser(user)
     }
@@ -125,6 +130,9 @@ fun MyAppNavHost(
     }
     var image by remember {
         mutableStateOf<Uri>(users[0].image.toUri())
+    }
+    var messages by remember {
+        mutableStateOf<String>(users[0].messageList)
     }
 
     val context = LocalContext.current
@@ -137,8 +145,9 @@ fun MyAppNavHost(
                 image = new_image
                 val user = User(
                     uid = users[0].uid,
-                    userName,
-                    image.toString(),
+                    userName = userName,
+                    image = image.toString(),
+                    messageList = messages
                 )
                 userDao.updateUser(user)
             }
@@ -149,8 +158,9 @@ fun MyAppNavHost(
         userName = new_name
         val user = User(
             uid = users[0].uid,
-            userName,
-            image.toString(),
+            userName = userName,
+            image = image.toString(),
+            messageList = messages
         )
         userDao.updateUser(user)
     }
@@ -159,6 +169,26 @@ fun MyAppNavHost(
         pickMedia.launch(
             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         )
+    }
+
+    fun stringToList(teksti: String): List<Message> {
+        val sType = object : TypeToken<List<Message>>() {}.type
+        val otherList = gson.fromJson<List<Message>>(teksti, sType)
+        return otherList
+    }
+
+    fun addMessageToList(message: Message) {
+        val newMessages = stringToList(messages)
+        //val message = Message("mina", new_message)
+        (newMessages as ArrayList).add(message)
+        messages = gson.toJson(newMessages)
+        val user = User(
+            uid = users[0].uid,
+            userName = userName,
+            image = image.toString(),
+            messageList = messages
+        )
+        userDao.updateUser(user)
     }
 
     NavHost(
@@ -172,7 +202,9 @@ fun MyAppNavHost(
                     navController.navigate("friendsList")
                 },
                 userName = userName,
-                image = image
+                image = image,
+                conversation = stringToList(messages), ///userDao.getMessages()
+                addMessageToList = { addMessageToList(it) }
             )
         }
         composable("friendsList") {
